@@ -29,18 +29,20 @@ class Karyawan {
 
   factory Karyawan.fromJson(Map<String, dynamic> json) {
     return Karyawan(
-      idKar: json['id_kar'],
-      nama: json['nama'],
-      sex: json['sex'],
-      jabatan: json['jabatan'],
-      norek: json['norek'].toString(),
-      upah: json['upah'].toString(),
-      tglLahir: json['tgl_lahir'],
-      kotaLahir: json['kota_lahir'],
-      alamat: json['alamat'],
-      tglMasuk: json['tgl_masuk'],
-      tglKeluar: json['tgl_keluar'],
-      status: json['status'],
+      idKar: json['id_kar'] != null
+          ? int.tryParse(json['id_kar'].toString())
+          : null,
+      nama: json['nama']?.toString() ?? '',
+      sex: json['sex']?.toString() ?? '',
+      jabatan: json['jabatan']?.toString() ?? '',
+      norek: json['norek']?.toString() ?? '',
+      upah: json['upah']?.toString() ?? '',
+      tglLahir: json['tgl_lahir']?.toString() ?? '',
+      kotaLahir: json['kota_lahir']?.toString() ?? '',
+      alamat: json['alamat']?.toString() ?? '',
+      tglMasuk: json['tgl_masuk']?.toString() ?? '',
+      tglKeluar: json['tgl_keluar']?.toString(),
+      status: json['status']?.toString() ?? '',
     );
   }
 

@@ -13,10 +13,14 @@ class Absensi {
 
   factory Absensi.fromJson(Map<String, dynamic> json) {
     return Absensi(
-      idAbsensi: json['id_absensi'],
-      idKar: json['id_kar'],
-      namaKar: json['nama_kar'],
-      absen: json['absen'],
+      idAbsensi: json['id_absensi'] != null
+          ? int.tryParse(json['id_absensi'].toString())
+          : null,
+      idKar: json['id_kar'] != null
+          ? (int.tryParse(json['id_kar'].toString()) ?? 0)
+          : 0,
+      namaKar: json['nama_kar']?.toString() ?? '',
+      absen: json['absen']?.toString() ?? '',
     );
   }
 

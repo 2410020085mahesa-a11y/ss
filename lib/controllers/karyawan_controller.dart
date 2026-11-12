@@ -8,7 +8,7 @@ class KaryawanController extends GetxController {
   var karyawanList = <Karyawan>[].obs;
   var isLoading = false.obs;
 
-  final String apiUrl = '$baseUrl/karyawan';
+  String get apiUrl => '$baseUrl/karyawan';
   final Map<String, String> headers = {
     'Content-Type': 'application/json',
     'Accept': 'application/json',

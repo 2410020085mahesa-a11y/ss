@@ -8,7 +8,7 @@ class AbsensiController extends GetxController {
   var absensiList = <Absensi>[].obs;
   var isLoading = false.obs;
 
-  final String apiUrl = '$baseUrl/absensi';
+  String get apiUrl => '$baseUrl/absensi';
   final Map<String, String> headers = {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
