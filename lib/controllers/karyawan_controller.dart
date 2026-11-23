@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import '../config.dart';
@@ -32,42 +33,137 @@ class KaryawanController extends GetxController {
         throw Exception('Gagal ambil data karyawan');
       }
     } catch (e) {
-      Get.snackbar('Error', e.toString());
+      Get.snackbar(
+        'Error',
+        e.toString(),
+        backgroundColor: const Color(0xFFE53935),
+        colorText: Colors.white,
+      );
     } finally {
       isLoading.value = false;
     }
   }
 
-  Future<void> addKaryawan(Karyawan karyawan) async {
-    final response = await http.post(Uri.parse(apiUrl),
-        headers: headers, body: json.encode(karyawan.toJson()));
-    if (response.statusCode == 201) {
-      karyawanList.add(Karyawan.fromJson(json.decode(response.body)));
-    } else {
-      throw Exception('Gagal simpan data karyawan');
-    }
-  }
-
-  Future<void> updateKaryawan(int id, Karyawan karyawan) async {
-    final response = await http.put(Uri.parse('$apiUrl/$id'),
-        headers: headers, body: json.encode(karyawan.toJson()));
-    if (response.statusCode == 200) {
-      final index = karyawanList.indexWhere((k) => k.idKar == id);
-      if (index != -1) {
-        karyawanList[index] = Karyawan.fromJson(json.decode(response.body));
+  Future<bool> addKaryawan(Karyawan karyawan) async {
+    isLoading.value = true;
+    try {
+      final response = await http.post(
+        Uri.parse(apiUrl),
+        headers: headers,
+        body: json.encode(karyawan.toJson()),
+      );
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        await tangkapDataKaryawan();
+        Get.snackbar(
+          'Sukses',
+          'Data karyawan berhasil disimpan',
+          backgroundColor: const Color(0xFF4CAF50),
+          colorText: Colors.white,
+          snackPosition: SnackPosition.BOTTOM,
+        );
+        return true;
+      } else {
+        String msg = 'Gagal simpan data karyawan';
+        try {
+          final err = json.decode(response.body);
+          if (err['message'] != null) msg = err['message'];
+        } catch (_) {}
+        Get.snackbar(
+          'Gagal Simpan',
+          msg,
+          backgroundColor: const Color(0xFFE53935),
+          colorText: Colors.white,
+          snackPosition: SnackPosition.BOTTOM,
+        );
+        return false;
       }
-    } else {
-      throw Exception('Gagal ubah data karyawan');
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        e.toString(),
+        backgroundColor: const Color(0xFFE53935),
+        colorText: Colors.white,
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return false;
+    } finally {
+      isLoading.value = false;
     }
   }
 
-  Future<void> deleteKaryawan(int id) async {
-    final response =
-        await http.delete(Uri.parse('$apiUrl/$id'), headers: headers);
-    if (response.statusCode == 204) {
-      karyawanList.removeWhere((k) => k.idKar == id);
-    } else {
-      throw Exception('Gagal hapus data karyawan');
+  Future<bool> updateKaryawan(int id, Karyawan karyawan) async {
+    isLoading.value = true;
+    try {
+      final response = await http.put(
+        Uri.parse('$apiUrl/$id'),
+        headers: headers,
+        body: json.encode(karyawan.toJson()),
+      );
+      if (response.statusCode == 200) {
+        await tangkapDataKaryawan();
+        Get.snackbar(
+          'Sukses',
+          'Data karyawan berhasil diubah',
+          backgroundColor: const Color(0xFF4CAF50),
+          colorText: Colors.white,
+          snackPosition: SnackPosition.BOTTOM,
+        );
+        return true;
+      } else {
+        String msg = 'Gagal ubah data karyawan';
+        try {
+          final err = json.decode(response.body);
+          if (err['message'] != null) msg = err['message'];
+        } catch (_) {}
+        Get.snackbar(
+          'Gagal Ubah',
+          msg,
+          backgroundColor: const Color(0xFFE53935),
+          colorText: Colors.white,
+          snackPosition: SnackPosition.BOTTOM,
+        );
+        return false;
+      }
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        e.toString(),
+        backgroundColor: const Color(0xFFE53935),
+        colorText: Colors.white,
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return false;
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<bool> deleteKaryawan(int id) async {
+    try {
+      final response =
+          await http.delete(Uri.parse('$apiUrl/$id'), headers: headers);
+      if (response.statusCode == 204 || response.statusCode == 200) {
+        karyawanList.removeWhere((k) => k.idKar == id);
+        Get.snackbar(
+          'Sukses',
+          'Data karyawan berhasil dihapus',
+          backgroundColor: const Color(0xFF4CAF50),
+          colorText: Colors.white,
+          snackPosition: SnackPosition.BOTTOM,
+        );
+        return true;
+      } else {
+        throw Exception('Gagal hapus data karyawan');
+      }
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        e.toString(),
+        backgroundColor: const Color(0xFFE53935),
+        colorText: Colors.white,
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return false;
     }
   }
 }

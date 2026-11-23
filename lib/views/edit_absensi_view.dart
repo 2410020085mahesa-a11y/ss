@@ -35,6 +35,43 @@ class _EditAbsensiViewState extends State<EditAbsensiView> {
     super.dispose();
   }
 
+  Future<void> _selectDate(
+      BuildContext context, TextEditingController textController) async {
+    DateTime initial = DateTime.now();
+    try {
+      if (textController.text.isNotEmpty) {
+        initial = DateTime.parse(textController.text);
+      }
+    } catch (_) {}
+
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: initial,
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+    if (picked != null) {
+      textController.text =
+          "${picked.year.toString().padLeft(4, '0')}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
+    }
+  }
+
+  String _formatDate(String text) {
+    final clean = text.trim();
+    if (clean.isEmpty) return '';
+    try {
+      final parts = clean.replaceAll('/', '-').split('-');
+      if (parts.length == 3) {
+        if (parts[0].length == 4) {
+          return "${parts[0]}-${parts[1].padLeft(2, '0')}-${parts[2].padLeft(2, '0')}";
+        } else if (parts[2].length == 4) {
+          return "${parts[2]}-${parts[1].padLeft(2, '0')}-${parts[0].padLeft(2, '0')}";
+        }
+      }
+    } catch (_) {}
+    return clean;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -47,34 +84,57 @@ class _EditAbsensiViewState extends State<EditAbsensiView> {
           children: [
             TextField(
               controller: idKarController,
-              decoration: const InputDecoration(labelText: 'ID Karyawan'),
+              decoration: const InputDecoration(labelText: 'ID Karyawan *'),
               keyboardType: TextInputType.number,
             ),
             TextField(
               controller: namaKarController,
-              decoration: const InputDecoration(labelText: 'Nama Karyawan'),
+              decoration: const InputDecoration(labelText: 'Nama Karyawan *'),
             ),
             TextField(
               controller: absenController,
-              decoration: const InputDecoration(labelText: 'Tanggal Absen (YYYY-MM-DD)'),
+              readOnly: true,
+              onTap: () => _selectDate(context, absenController),
+              decoration: InputDecoration(
+                labelText: 'Tanggal Absen (YYYY-MM-DD) *',
+                suffixIcon: IconButton(
+                  icon: const Icon(Icons.calendar_today),
+                  onPressed: () => _selectDate(context, absenController),
+                ),
+              ),
             ),
             const SizedBox(height: 25),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size.fromHeight(45),
-              ),
-              onPressed: () {
-                final updatedAbsensi = Absensi(
-                  idAbsensi: widget.absensi.idAbsensi,
-                  idKar: int.tryParse(idKarController.text) ?? widget.absensi.idKar,
-                  namaKar: namaKarController.text,
-                  absen: absenController.text,
-                );
-                controller.updateAbsensi(widget.absensi.idAbsensi!, updatedAbsensi);
-                Get.back();
-              },
-              child: const Text('Simpan Perubahan'),
-            ),
+            Obx(() => ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(48),
+                  ),
+                  onPressed: controller.isLoading.value
+                      ? null
+                      : () async {
+                          final updatedAbsensi = Absensi(
+                            idAbsensi: widget.absensi.idAbsensi,
+                            idKar: int.tryParse(idKarController.text.trim()) ??
+                                widget.absensi.idKar,
+                            namaKar: namaKarController.text.trim(),
+                            absen: _formatDate(absenController.text),
+                          );
+
+                          final success = await controller.updateAbsensi(
+                            widget.absensi.idAbsensi!,
+                            updatedAbsensi,
+                          );
+                          if (success) {
+                            Get.back();
+                          }
+                        },
+                  child: controller.isLoading.value
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('Simpan Perubahan'),
+                )),
           ],
         ),
       ),

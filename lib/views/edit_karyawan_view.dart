@@ -59,8 +59,49 @@ class _EditKaryawanViewState extends State<EditKaryawanView> {
     super.dispose();
   }
 
+  Future<void> _selectDate(
+      BuildContext context, TextEditingController textController) async {
+    DateTime initial = DateTime.now();
+    try {
+      if (textController.text.isNotEmpty) {
+        initial = DateTime.parse(textController.text);
+      }
+    } catch (_) {}
+
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: initial,
+      firstDate: DateTime(1950),
+      lastDate: DateTime(2100),
+    );
+    if (picked != null) {
+      textController.text =
+          "${picked.year.toString().padLeft(4, '0')}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
+    }
+  }
+
+  String _formatDate(String text) {
+    final clean = text.trim();
+    if (clean.isEmpty) return '';
+    try {
+      final parts = clean.replaceAll('/', '-').split('-');
+      if (parts.length == 3) {
+        if (parts[0].length == 4) {
+          return "${parts[0]}-${parts[1].padLeft(2, '0')}-${parts[2].padLeft(2, '0')}";
+        } else if (parts[2].length == 4) {
+          return "${parts[2]}-${parts[1].padLeft(2, '0')}-${parts[0].padLeft(2, '0')}";
+        }
+      }
+    } catch (_) {}
+    return clean;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final isLaki = sexController.text.toLowerCase().contains('laki');
+    final isAktif = statusController.text.toLowerCase().contains('aktif') &&
+        !statusController.text.toLowerCase().contains('non');
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Edit Data Karyawan'),
@@ -71,76 +112,129 @@ class _EditKaryawanViewState extends State<EditKaryawanView> {
           children: [
             TextField(
               controller: namaController,
-              decoration: const InputDecoration(labelText: 'Nama Karyawan'),
+              decoration: const InputDecoration(labelText: 'Nama Karyawan *'),
             ),
-            TextField(
-              controller: sexController,
-              decoration: const InputDecoration(labelText: 'Jenis Kelamin (Laki-Laki / Perempuan)'),
+            DropdownButtonFormField<String>(
+              value: isLaki ? 'Laki-Laki' : 'Perempuan',
+              decoration: const InputDecoration(labelText: 'Jenis Kelamin'),
+              items: const [
+                DropdownMenuItem(value: 'Laki-Laki', child: Text('Laki-Laki')),
+                DropdownMenuItem(value: 'Perempuan', child: Text('Perempuan')),
+              ],
+              onChanged: (val) {
+                if (val != null) sexController.text = val;
+              },
             ),
             TextField(
               controller: jabatanController,
-              decoration: const InputDecoration(labelText: 'Jabatan'),
+              decoration: const InputDecoration(labelText: 'Jabatan *'),
             ),
             TextField(
               controller: norekController,
-              decoration: const InputDecoration(labelText: 'No. Rekening'),
+              decoration: const InputDecoration(labelText: 'No. Rekening *'),
+              keyboardType: TextInputType.number,
             ),
             TextField(
               controller: upahController,
-              decoration: const InputDecoration(labelText: 'Upah / Gaji'),
+              decoration: const InputDecoration(labelText: 'Upah / Gaji *'),
               keyboardType: TextInputType.number,
             ),
             TextField(
               controller: kotaLahirController,
-              decoration: const InputDecoration(labelText: 'Kota Lahir'),
+              decoration: const InputDecoration(labelText: 'Kota Lahir *'),
             ),
             TextField(
               controller: tglLahirController,
-              decoration: const InputDecoration(labelText: 'Tanggal Lahir (YYYY-MM-DD)'),
+              readOnly: true,
+              onTap: () => _selectDate(context, tglLahirController),
+              decoration: InputDecoration(
+                labelText: 'Tanggal Lahir (YYYY-MM-DD) *',
+                suffixIcon: IconButton(
+                  icon: const Icon(Icons.calendar_today),
+                  onPressed: () => _selectDate(context, tglLahirController),
+                ),
+              ),
             ),
             TextField(
               controller: alamatController,
-              decoration: const InputDecoration(labelText: 'Alamat'),
+              decoration: const InputDecoration(labelText: 'Alamat *'),
             ),
             TextField(
               controller: tglMasukController,
-              decoration: const InputDecoration(labelText: 'Tanggal Masuk (YYYY-MM-DD)'),
+              readOnly: true,
+              onTap: () => _selectDate(context, tglMasukController),
+              decoration: InputDecoration(
+                labelText: 'Tanggal Masuk (YYYY-MM-DD) *',
+                suffixIcon: IconButton(
+                  icon: const Icon(Icons.calendar_today),
+                  onPressed: () => _selectDate(context, tglMasukController),
+                ),
+              ),
             ),
             TextField(
               controller: tglKeluarController,
-              decoration: const InputDecoration(labelText: 'Tanggal Keluar (Opsional, YYYY-MM-DD)'),
+              readOnly: true,
+              onTap: () => _selectDate(context, tglKeluarController),
+              decoration: InputDecoration(
+                labelText: 'Tanggal Keluar (Opsional)',
+                suffixIcon: IconButton(
+                  icon: const Icon(Icons.calendar_today),
+                  onPressed: () => _selectDate(context, tglKeluarController),
+                ),
+              ),
             ),
-            TextField(
-              controller: statusController,
-              decoration: const InputDecoration(labelText: 'Status (Aktif / Nonaktif)'),
+            DropdownButtonFormField<String>(
+              value: isAktif ? 'Aktif' : 'Nonaktif',
+              decoration: const InputDecoration(labelText: 'Status'),
+              items: const [
+                DropdownMenuItem(value: 'Aktif', child: Text('Aktif')),
+                DropdownMenuItem(value: 'Nonaktif', child: Text('Nonaktif')),
+              ],
+              onChanged: (val) {
+                if (val != null) statusController.text = val;
+              },
             ),
             const SizedBox(height: 25),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size.fromHeight(45),
-              ),
-              onPressed: () {
-                final updatedKaryawan = Karyawan(
-                  idKar: widget.karyawan.idKar,
-                  nama: namaController.text,
-                  sex: sexController.text,
-                  jabatan: jabatanController.text,
-                  norek: norekController.text,
-                  upah: upahController.text,
-                  kotaLahir: kotaLahirController.text,
-                  tglLahir: tglLahirController.text,
-                  alamat: alamatController.text,
-                  tglMasuk: tglMasukController.text,
-                  tglKeluar: tglKeluarController.text.isNotEmpty
-                      ? tglKeluarController.text
-                      : null,
-                  status: statusController.text,
-                );
-                controller.updateKaryawan(widget.karyawan.idKar!, updatedKaryawan);
-                Get.back();
-              },
-              child: const Text('Simpan Perubahan'),
-            ),
+            Obx(() => ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(48),
+                  ),
+                  onPressed: controller.isLoading.value
+                      ? null
+                      : () async {
+                          final updatedKaryawan = Karyawan(
+                            idKar: widget.karyawan.idKar,
+                            nama: namaController.text.trim(),
+                            sex: sexController.text.trim(),
+                            jabatan: jabatanController.text.trim(),
+                            norek: norekController.text.trim(),
+                            upah: upahController.text.trim(),
+                            kotaLahir: kotaLahirController.text.trim(),
+                            tglLahir: _formatDate(tglLahirController.text),
+                            alamat: alamatController.text.trim(),
+                            tglMasuk: _formatDate(tglMasukController.text),
+                            tglKeluar: tglKeluarController.text.trim().isNotEmpty
+                                ? _formatDate(tglKeluarController.text)
+                                : null,
+                            status: statusController.text.trim(),
+                          );
+
+                          final success = await controller.updateKaryawan(
+                            widget.karyawan.idKar!,
+                            updatedKaryawan,
+                          );
+                          if (success) {
+                            Get.back();
+                          }
+                        },
+                  child: controller.isLoading.value
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('Simpan Perubahan'),
+                )),
           ],
         ),
       ),
